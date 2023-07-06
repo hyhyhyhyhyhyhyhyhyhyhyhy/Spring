@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xsi:schemaLocation="http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-5.2.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<!-- 로그인 없이 페이지를 보여줘야할 때에는 시큐리티를 적용하지 않겠다는 뜻 -->
+	<security:http pattern="/css/**" security="none" />
+	<security:http>
+		<!-- 패턴을 기반으로 항상 위에서 아래로 순차적으로 검색, 각각의 요소에 다 해당하는지 확인해보고 해당 안되면 보냄 ★★★★★ -->
+		<!-- **은 항상 맨 밑에 있어야 함 -->
+		<!-- 이 패턴에서는 어떤 권한을 요구합니다. 라는 뜻 -->
+		<security:intercept-url pattern="/top.jsp" access="permitAll()" />
+		<!-- 'ROLE_ADMIN'은 String -->
+		<security:intercept-url pattern="/admin/**" access="hasAuthority('ROLE_ADMIN')" />
+		<security:intercept-url pattern="/**" access="isAuthenticated()" />
+		<security:form-login default-target-url="/top.jsp" />
+		<security:logout logout-url="/logout" logout-success-url="/top.jsp" />
+		<!-- post방식으로 보낼 때에는 토큰 사용(csrf) -->
+		<!-- <security:csrf disabled="true" /> -->
+	</security:http>
+	
+	<!-- bean으로 등록해주고 @Service 지워줌 충돌날 가능성 있어서 -->
+	<bean id="userDetailService" class="com.yedam.app.user.service.CustomerUserDetailsService" />
+	
+	<security:authentication-manager>
+		<security:authentication-provider user-service-ref="userDetailService">
+				<!-- 실제론 DB와 연동해 동작, 지금은 동작 구조 확인을 위해 데이터를 넣어준 것! -->
+				<!-- 스프링 버전 샹향에 따라 비밀번호 암호화를 지정해줘야함 {noop}은 암호화되지 않았다고 알려주는 것임 -->
+<!-- 
+				<security:jdbc-user-service
+					data-source-ref="dataSource"
+					users-by-username-query="SELECT login_id, '{noop}'||password, 1
+                                      		 FROM t_user
+                                         	 WHERE login_id=?"
+					authorities-by-username-query="SELECT login_id, role_name
+                                            	   FROM t_user JOIN t_user_role
+                                            	   ON t_user.id = t_user_role.user_id
+                                            	   JOIN t_role
+                                            	   ON t_user_role.role_id= t_role.id
+                                            	   WHERE login_id=?" />
+ -->
+		</security:authentication-provider>
+	</security:authentication-manager>
+
+</beans>

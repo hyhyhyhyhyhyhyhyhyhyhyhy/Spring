@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yedam.app.dept.mapper.DeptInfoMapper">
+	
+	<!-- 공통 -->
+	<sql id="deptSelect">
+		SELECT department_id, 
+			   department_name, 
+			   manager_id, 
+			   location_id
+		FROM departments
+	</sql>
+	
+	<!-- 전체 조회 -->
+	<select id="selectAllDept" resultType="DeptInfoVO">
+		<include refid="deptSelect"/>
+		ORDER BY department_id
+	</select>
+	
+	<!-- 단건 조회 -->
+	<select id="selectOneDept" resultType="DeptInfoVO">
+		<include refid="deptSelect"/>
+		WHERE department_id = #{departmentId} 
+	</select>
+	
+	<!-- 등록 -->
+	<insert id="insertDeptInfo" parameterType="DeptInfoVO">
+		<selectKey keyProperty="departmentId"
+				   resultType="int"
+				   order="BEFORE">
+		SELECT NVL(Max(department_id), 0) + 10
+		FROM departments
+		</selectKey>
+		INSERT INTO departments(department_id,
+								department_name,
+								manager_id,
+								location_id)
+		VALUES (#{departmentId},
+				#{departmentName},
+				#{managerId},
+				#{locationId})
+	</insert>
+	
+	<!-- 수정 -->
+	<insert id="updateDeptInfo" parameterType="DeptInfoVO">
+		UPDATE departments
+		<!-- set-if 태그 사용 시 콤마를 삭제해 줌 
+				태그로 쓰지 않고 SET 으로만 써도 되지만 그럴 경우,
+					쉼표를 제거해 주지 않을 가능성이 있다. 
+						+ 오류 가능성 (모든 column에 if 태그를 걸었기 때문에
+							동적 쿼리문에서 하나라도 제대로 들어가지 않으면 미완성으로 오류가 날 수 있음 (myBatis 는 if태그만 지원))-->
+		<set>
+			<if test="departmentName != null and !departmentName.equals('')">
+				department_name = #{departmentName}
+			</if>
+			<if test="managerId > 0">
+				, manager_id = #{managerId}
+			</if>
+			<!--  <= : lte -->
+			<if test="locationId lte 0">
+				, location_id = #{locationId}
+			</if>
+			<!-- 그래서 locationId가 0보다 같거나 클 때 데이터를 넣는 구문을 만듦으로써 하나라도 제대로 동작할 수 있는 값을 지정해주면 좋다 -->
+		</set>
+		WHERE department_id = #{departmentId}
+	</insert>
+	
+	<!-- 삭제 -->
+	<insert id="deleteDeptInfo" parameterType="int">
+		DELETE FROM departments
+		WHERE department_id = #{departmentId}
+	</insert>
+	
+</mapper>

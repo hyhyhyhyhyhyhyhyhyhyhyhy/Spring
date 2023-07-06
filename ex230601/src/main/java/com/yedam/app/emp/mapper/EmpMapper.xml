@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yedam.app.emp.mapper.EmpMapper">
+
+	<!-- 재사용할 sql 쿼리문 -->
+	<sql id="empWhere">
+		<where>
+			<if test="departmentId != null and departmentId != '' ">
+				AND department_id in 
+				<foreach open="(" close=")" collection="deptArr" item="dept" separator=",">
+				#{dept}
+			</foreach>
+			</if>
+			<if test="firstName != null and firstName != '' ">
+				AND first_name like '%${firstName}%'
+			</if>
+		</where>
+	</sql>
+	
+	<!-- 단건 조회 -->
+	<select id="selectOne" parameterType="int" resultType="EmpVO">
+		SELECT employee_id, first_name, last_name, job_id, email, department_id
+		FROM employees WHERE employee_id = #{empNo}
+	</select>
+	
+	<!-- 전체 조회 -->
+	<select id="selectList" resultType="EmpVO">
+		SELECT employee_id, first_name, last_name, job_id, email, department_id
+		FROM employees
+		<include refid="empWhere"></include>
+		<choose>
+			<when test="orderColumn != null and orderColumn != '' ">
+				ORDER BY ${orderColumn}
+			</when>
+			<otherwise>
+				ORDER BY employee_id
+			</otherwise>
+		</choose>
+	</select>
+	
+	<!-- 등록 -->
+	<insert id="addEmp" parameterType="EmpVO">
+		<selectKey keyProperty="employeeId" resultType="string" order="BEFORE">
+			SELECT max(employee_id)+1
+			FROM employees
+		</selectKey>
+		INSERT INTO employees
+		(EMPLOYEE_ID, first_name, last_name, EMAIL, HIRE_DATE, JOB_ID, department_id)
+		VALUES
+		(#{employeeId}, #{firstName}, #{lastName}, #{email}, sysdate, #{jobId}, #{departmentId})
+	</insert>
+	
+	<!-- 건수 조회 -->
+	<select id="selectCount" resultType="int">
+		SELECT count(*) FROM employees
+		<include refid="empWhere"></include>
+	</select>
+	
+	<!-- 업무코드 조회 -->
+	<select id="selectJobs" resultType="map">
+		SELECT job_id "jobId", job_title "jobTitle" FROM jobs ORDER BY job_title
+	</select>
+	
+	<!-- 부서코드 조회 -->
+	<select id="selectDepts" resultType="map">
+		SELECT department_id "departmentId", department_name "departmentName" FROM departments ORDER BY department_name
+	</select>
+	
+	<!-- 업데이트 -->
+	<update id="updateEmp">
+		UPDATE employees SET first_name = #{firstName}, last_name = #{lastName}, email = #{email}
+		WHERE employee_id = #{employeeId}
+	</update>
+	
+	<!-- 삭제 -->
+	<delete id="delEmp">
+		DELETE FROM employees where employee_id = #{employeeId}
+	</delete>
+</mapper>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yedam.app.emp.mapper.DeptMapper">
+
+<!-- 전체 조회 -->
+<select id="showAllDept" resultType="DeptVO">
+	select * from departments 
+	<where>
+		<if test="departmentId != null and departmentId != '' ">
+			And department_id in 
+			
+		</if>
+	</where>
+	order by department_id
+</select>
+
+
+</mapper>
